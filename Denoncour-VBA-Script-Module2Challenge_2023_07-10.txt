@@ -1,0 +1,166 @@
+
+Sub Stock_Price():
+
+'N.b. - Eliminated "High" and "Low" columns (not used for solution) to make program run more efficiently.
+'Reed Hyde approved this.
+
+    For Each ws In Worksheets
+    
+         Dim Ticker As String
+    
+         'Set variable to hold total per ticker
+         Dim VolumeTotal As Double
+         VolumeTotal = 0
+         
+         Dim Summary_Row As Long
+         Summary_Row = 2
+         
+         Dim openPrice As Double
+         Dim closePrice As Double
+        
+         Dim yearlyChange As Double
+         Dim percentChange As Double
+        
+         Dim lastrow As Long
+         lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+         
+         openPrice = ws.Cells(2, 3).Value
+         
+         Dim MaximumVolume As Variant
+         MaximumVolume = 0
+         
+         Dim MaxPCIncrease As Variant
+         MaxPCIncrease = 0
+         
+         Dim MaxPCDecrease As Variant
+         MaxPCDecrease = 0
+         
+         'Create columns and headers for Ticker, Total Stock Volume, Yearly Change and Percent Change
+         ws.Range("G1").EntireColumn.Insert
+         ws.Cells(1, 7).Value = "Ticker"
+         
+         ws.Range("H1").EntireColumn.Insert
+         ws.Cells(1, 8).Value = "Yearly Change"
+         
+         ws.Range("I1").EntireColumn.Insert
+         ws.Cells(1, 9).Value = "Percent Change"
+         
+         ws.Range("J1").EntireColumn.Insert
+         ws.Cells(1, 10).Value = "Total Stock Volume"
+         
+         'Create Summary Table column headers for other summary columns
+         ws.Cells(1, 13).Value = "Ticker"
+         ws.Cells(1, 14).Value = "Value"
+         ws.Cells(2, 12).Value = "Greatest % Increase"
+         ws.Cells(3, 12).Value = "Greatest % Increase"
+         ws.Cells(4, 12).Value = "Greatest Total Volume"
+        
+         
+         For I = 2 To lastrow
+         
+             'check to see if we are on same ticker; if it is not ...
+             If ws.Cells(I + 1, 1).Value <> ws.Cells(I, 1).Value Then
+                   
+                'Set the ticker
+                 Ticker = ws.Cells(I, 1).Value
+                 
+                 'add to the Volume
+                 VolumeTotal = VolumeTotal + ws.Cells(I, 5).Value
+                 
+                 'We don't know final close price until we transition to next ticker
+                 closePrice = ws.Cells(I, 4).Value
+                   
+                'Do calculations
+                 yearlyChange = closePrice - openPrice
+                 percentChange = yearlyChange / openPrice
+                 
+                 
+                 'Print Summary Table
+                 ws.Range("G" & Summary_Row).Value = Ticker
+                 ws.Range("J" & Summary_Row).Value = VolumeTotal
+                 ws.Range("H" & Summary_Row).Value = yearlyChange
+                 
+                     If yearlyChange >= 0 Then
+                     ws.Range("H" & Summary_Row).Interior.ColorIndex = 4
+                 
+                     Else
+                     ws.Range("H" & Summary_Row).Interior.ColorIndex = 3
+                 
+                     End If
+                    
+                 ws.Range("I" & Summary_Row).Value = FormatPercent(percentChange)
+                 
+                     If percentChange >= 0 Then
+                     ws.Range("I" & Summary_Row).Interior.ColorIndex = 4
+                 
+                     Else
+                     ws.Range("I" & Summary_Row).Interior.ColorIndex = 3
+                 
+                     End If
+                 
+                 
+                 'Add 1 to the summary table row
+                 Summary_Row = Summary_Row + 1
+                 
+                 'Prep next ticker
+                 VolumeTotal = 0
+                 openPrice = ws.Cells(I + 1, 3).Value
+                 
+             'If the cell immediately following a row is the same ticker
+             Else
+             
+                 'add to the volume total
+                 VolumeTotal = VolumeTotal + ws.Cells(I, 5).Value
+                
+             End If
+             
+         Next I
+             
+         For E = 2 To lastrow
+         
+            If ws.Cells(E, 10).Value > MaximumVolume Then
+                 Ticker = ws.Cells(E, 7).Value
+                 MaximumVolume = ws.Cells(E, 10).Value
+                 
+                 ws.Range("M4").Value = Ticker
+                 ws.Range("N4").Value = MaximumVolume
+                 
+             End If
+              
+             If ws.Cells(E, 9).Value > MaxPCIncrease Then
+             
+                 Ticker = ws.Cells(E, 7).Value
+                 MaxPCIncrease = ws.Cells(E, 9).Value
+                 
+                 ws.Range("M2").Value = Ticker
+                 ws.Range("N2").Value = MaxPCIncrease
+                 
+                 With ws.Range("N2")
+                     .NumberFormat = "0.00%"
+                     .Value = .Value
+                 End With
+                 
+             End If
+             
+             If ws.Cells(E, 9).Value < MaxPCDecrease Then
+            
+               Ticker = ws.Cells(E, 7).Value
+               MaxPCDecrease = ws.Cells(E, 9).Value
+                 
+               ws.Range("M3").Value = Ticker
+               ws.Range("N3").Value = MaxPCDecrease
+                 
+                With ws.Range("N3")
+                   .NumberFormat = "0.00%"
+                   .Value = .Value
+                End With
+                
+             End If
+               
+         Next E
+         
+         ws.Columns("A:N").AutoFit
+         
+    Next ws
+    
+End Sub
